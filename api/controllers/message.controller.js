@@ -1,4 +1,5 @@
 import Message from "../models/message.model.js";
+import { getConnectedUsers, getIO } from "../socket/socket.server.js";
 
 export const sendMessage = async (req, res) => {
   try {
@@ -8,6 +9,14 @@ export const sendMessage = async (req, res) => {
       sender: req.user._id,
       receiver: receiverId,
       content,
+    });
+
+    const io = getIO();
+    const connectedUsers = getConnectedUsers();
+    const receiverSocketId = connectedUsers.get(receiverId);
+
+    io.to(receiverSocketId).emit("newMessage", {
+      message: newMessage,
     });
 
     res.status(201).json({

@@ -10,6 +10,6 @@ const router = express.Router();
 router.use(protectRoute);
 
 router.post("/send", sendMessage);
-router.post("/conversation:userId", getConversation);
+router.post("/conversation/:userId", getConversation);
 
 export default router;

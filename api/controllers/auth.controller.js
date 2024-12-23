@@ -16,7 +16,6 @@ export const signup = async (req, res) => {
         message: `All fields are required`,
       });
     }
-
     if (age < 18) {
       return res.status(400).json({
         success: false,
@@ -39,7 +38,6 @@ export const signup = async (req, res) => {
       gender,
       genderPreference,
     });
-
     const token = signToken(newUser._id);
 
     res.cookie("jwt", token, {
@@ -72,8 +70,8 @@ export const login = async (req, res) => {
       });
     }
 
-    const user = await User.find({ email }).select("+password");
-
+    const user = await User.findOne({ email }).select("+password");
+    console.log(user);
     if (!user || !(await user.matchPassword(password))) {
       return res.status(404).json({
         success: false,
@@ -82,7 +80,7 @@ export const login = async (req, res) => {
     }
 
     const token = signToken(user._id);
-
+    9;
     res.cookie("jwt", token, {
       maxAge: 15 * 24 * 60 * 60 * 1000,
       httpOnly: true,

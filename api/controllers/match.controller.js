@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import { getConnectedUsers, getIO } from "../socket/socket.server.js";
 
 export const swipeRight = async (req, res) => {
   try {
@@ -18,6 +19,29 @@ export const swipeRight = async (req, res) => {
         currentUser.matches.push(likedUserId);
         likedUser.matches.push(currentUser._id);
         await Promise.all([currentUser.save(), likedUser.save()]);
+
+        const connectedUsers = getConnectedUsers();
+        const io = getIO();
+
+        const likedUserSocketId = connectedUsers.get(likedUserId);
+        if (likedUserSocketId) {
+          io.to(likedUserSocketId).emit("newMatch", {
+            _id: currentUser._id,
+            name: currentUser.name,
+            image: currentUser.image,
+          });
+        }
+
+        const currentUserSocketId = connectedUsers.get(
+          currentUser._id.toString()
+        );
+        if (currentUserSocketId) {
+          io.to(currentUserSocketId).emit("newMatch", {
+            _id: likedUserId,
+            name: likedUser.name,
+            image: likedUser.image,
+          });
+        }
       }
     }
     res.status(201).json({
@@ -88,14 +112,14 @@ export const getUserProfiles = async (req, res) => {
 
 export const getMatches = async (req, res) => {
   try {
-    const matches = await User.findById(req.user._id).populate(
+    const user = await User.findById(req.user._id).populate(
       "matches",
       "name image"
     );
 
     res.status(201).json({
       success: true,
-      matches,
+      matches: user.matches,
     });
   } catch (error) {
     res.status(500).json({
